@@ -1,6 +1,201 @@
-## Animal level data
-library(readr)
+1. ## Animal level data analysis for sheep populations
 
+getwd()
+library(readr)
+library(ggplot2)
+library(car)
+library(dplyr)
+setwd("/Users/Tulsigompo/Documents/Presentaion_Dr_Gompo/Rupandehi_study_data/Goat_and_sheep_brucella")
+list.files()
+
+
+## Sheep data files
+sheep_herd_data<-read_csv("/Users/Tulsigompo/Documents/Presentaion_Dr_Gompo/Rupandehi_study_data/Goat_and_sheep_brucella/Sheep_herd_only.csv")
+head(sheep_herd_data)
+str(sheep_herd_data)
+
+## Sheep individual data only
+sheep_data_only<-read_csv("/Users/Tulsigompo/Documents/Presentaion_Dr_Gompo/Rupandehi_study_data/Goat_and_sheep_brucella/sheep_data_only_latest.csv")
+head(sheep_data_only)
+str(sheep_data_only)
+dim(sheep_data_only)
+# Checking correlation son first place
+
+# cheking for the correlations 
+
+cor(sheep_data_only$gender_cat_codes,sheep_data_only$age_year_cat_codes)
+cor(sheep_data_only$gender_cat_codes,sheep_data_only$herd_size_cat_codes)
+cor(sheep_data_only$age_year_cat_codes,sheep_data_only$herd_size_cat_codes)
+library(dplyr)
+library(ggplot2)
+install.packages("corrplot")
+library(corrplot)
+library(GGally)
+
+sheep_data <- sheep_data_only %>%
+  select(age_year_cat_codes,gender_cat_codes,herd_size_cat_codes,median_parity_codes)
+cor(sheep_data)
+corrplot(sheep_data) 
+
+# Age and parity are correlated son one is dropped
+cor.test(sheep_data_only$Parity, sheep_data_only$Age_years)
+sheep_data.cor = cor(sheep_data, method = c("spearman"))
+sheep_data.cor
+
+cor.test(sheep_data_only$median_parity_codes, sheep_data_only$age_year_cat_codes)    
+
+# Breed 
+table (sheep_data_only $Breed ,sheep_data_only$RBPT_final) # lampuchre is non-significant risk
+
+#Age category
+summary(sheep_data_only$Age_years)
+median(sheep_data_only$Age_years)
+mean(sheep_data_only$Age_years)
+range(sheep_data_only$Age_years)
+hist(sheep_data_only$Age_years)
+table (sheep_data_only $age_years_cat,sheep_data_only$RBPT_final) # Not significant
+table (sheep_data_only $age_years_cat,sheep_data_only$ELISA_final)# very very sig
+
+## Herd size
+median(sheep_data_only$Herd_size)
+summary(sheep_data_only$Herd_size)
+table (sheep_data_only $herd_size_cat,sheep_data_only$RBPT_final) # Not significant
+table (sheep_data_only $herd_size_cat, sheep_data_only$ELISA_final) # very very sig
+table (sheep_data_only $herd_size_cat)
+hist(sheep_data_only$Total_number)
+
+# Gender
+table (sheep_data_only $gender_cat,sheep_data_only$RBPT_final) # Not significant # check for confounding
+table (sheep_data_only $Gender,sheep_data_only$ELISA_final) # Not significant
+table(sheep_data_only $Gender)
+
+# medain_parity
+# parity
+summary(sheep_data_only$Parity)
+table (sheep_data_only $medain_parity,sheep_data_only$ELISA_final)
+
+## Strattiifcation with age 
+table (sheep_data_only $Gender,sheep_data_only$ELISA_final, sheep_data_only $age_years_cat) 
+# so, Age is not confounder here,as the difference is 6% only
+
+## animal_origin"
+table (sheep_data_only $animal_origin,sheep_data_only$Rose_Bengal_plate_test) # Not significant risk
+table (sheep_data_only $animal_origin,sheep_data_only$ELISA_final)  # controvercial, Not significant
+
+## Common_grazing_Herds
+table (sheep_data_only $Common_grazing_Herds,sheep_data_only$ELISA_final) # zero cells and non=significant
+
+
+##Repeat_breeding
+table (sheep_data_only $Repeat_breeding, sheep_data_only$ELISA_final)# Non signifcant risk and can be conisder
+
+
+Univariables
+# Ageyears (median= 2 years) 
+table(sheep_data_only$age_years_cat,sheep_data_only$ELISA_final)
+sheep_data_only$ELISA_final<-as.factor(sheep_data_only$ELISA_final)
+
+# Age cat
+sheep_data_only$age_year_cat<-as.factor(sheep_data_only$age_years_cat)
+sheep_age_cat<-glm (ELISA_final ~ age_years_cat,  data= sheep_data_only, family= binomial(link="logit"))
+summary(sheep_age_cat)
+Anova(sheep_age_cat)
+exp(coef(sheep_age_cat))
+exp(confint(sheep_age_cat))
+
+# herd size cat
+library(stats)
+table (sheep_data_only $herd_size_cat, sheep_data_only$ELISA_final) 
+sheep_data_only$age_years_cat <- relevel (sheep_data_only$ age_years_cat, ref ="equal_or_below_median")
+sheep_herd_size_cat<-glm (ELISA_final ~ herd_size_cat,  data= sheep_data_only, family= binomial(link="logit"))
+summary(sheep_herd_size_cat)
+Anova(sheep_herd_size_cat)
+exp(coef(sheep_herd_size_cat))
+exp(confint(sheep_herd_size_cat))
+
+# Gender  # Not sig and romove from final model
+table (sheep_data_only$Gender,sheep_data_only$ELISA_final) 
+sheep_data_only$Gender <- as.factor (sheep_data_only$ Gender)
+sheep_data_only$Gender <- relevel (sheep_data_only$ Gender, ref ="female")
+sheep_gender_cat<-glm (ELISA_final ~ Gender,  data= sheep_data_only, family= binomial(link="logit"))
+summary(sheep_gender_cat)
+Anova(sheep_gender_cat)
+exp(coef(sheep_gender_cat))
+exp(confint(sheep_gender_cat))
+
+ #median_parity # boderline significant and consider for te fianl model
+sheep_data_only$medain_parity<-as.factor(sheep_data_only$medain_parity)
+sheep_medain_parity<-glm (ELISA_final ~ medain_parity,  data= sheep_data_only,na.action=na.exclude, family= binomial(link="logit"))
+summary(sheep_medain_parity)
+Anova(sheep_medain_parity)
+exp(coef(sheep_medain_parity))
+exp(confint(sheep_medain_parity))
+
+# Aninal origin  Not sig and romove from final model
+table (sheep_data_only $animal_origin,sheep_data_only$ELISA_final) 
+sheep_data_only$animal_origin<-as.factor(sheep_data_only$animal_origin)
+sheep_animal_origin<-glm (ELISA_final ~ animal_origin,  data= sheep_data_only,na.action=na.exclude, family= binomial(link="logit"))
+summary(sheep_animal_origin)
+Anova(sheep_animal_origin)
+exp(coef(sheep_animal_origin))
+confint(sheep_animal_origin)
+
+
+# repeat Breeding
+table (sheep_data_only $Repeat_breeding, sheep_data_only$ELISA_final)
+sheep_data_only$Repeat_breeding<-as.factor(sheep_data_only$Repeat_breeding)
+sheep_Repeat_breeding<-glm (ELISA_final ~ Repeat_breeding,  data= sheep_data_only,na.action=na.exclude, family= binomial(link="logit"))
+summary(sheep_Repeat_breeding)
+Anova(sheep_Repeat_breeding)
+exp(coef(sheep_Repeat_breeding))
+confint(sheep_Repeat_breeding)
+
+# Common garaing ground
+table (sheep_data_only $Common_grazing_Herds,sheep_data_only$ELISA_final)
+sheep_data_only$Common_grazing_Herds<-as.factor(sheep_data_only$Common_grazing_Herds)
+sheep_grazing<-glm (ELISA_final ~ Common_grazing_Herds,  data= sheep_data_only,na.action=na.exclude, family= binomial(link="logit"))
+summary(sheep_grazing)
+Anova(sheep_grazing)
+exp(coef(sheep_grazing))
+confint(sheep_grazing)
+
+
+# Multivariables
+sheep_data_only$median_parity_codes<-as.factor(sheep_data_only$median_parity_codes)
+library(car)
+sheep_data_only$ ELISA_final<-as.factor(sheep_data_only$ELISA_final)
+FullModel_sheep_brucella_1<-glm( ELISA_final ~  animal_origin + age_years_cat +herd_size_cat+ Common_grazing_Herds+ History_of_abortion+
+                           Repeat_breeding, Water_Facility, data = sheep_data_only, na.action = na.omit, family = binomial(link = "logit"))
+summary(FullModel_sheep_brucella_1)
+Model_sheep_brucella_1<-step(FullModel_sheep_brucella_1, direction="backward")
+summary(Model_sheep_brucella_1)
+Anova(Model_sheep_brucella_1,type=3)
+exp(coef(Model_sheep_brucella_1))
+exp(confint(Model_sheep_brucella_1))
+
+
+  # Manual selction
+Model_2<- glm( ELISA_final ~ age_year_cat_codes +herd_size_cat+ Common_grazing_Herds +
+         Repeat_breeding,  data = sheep_data_only, na.action= na.exclude, family = binomial(link = "logit"))
+summary(Model_2)
+Anova(Model_2)
+exp(coef(Model_2))
+exp(confint(Model_2))
+  
+# AIC subset selection
+options(na.action = "na.exclude")
+library(MuMIn)
+AllSubset<-dredge(Model_sheep_brucella_1,rank="AIC")
+head(AllSubsets)
+  
+
+library(ResourceSelection)
+hoslem.test(Model_2$y,fitted(Model_2),g=10)
+...................................................................................................
+###
+2.## Animal level data analysis for goat population
+
+library(readr)
 setwd("/Users/Tulsigompo/Documents/Presentaion_Dr_Gompo/Rupandehi_study_data/Goat_and_sheep_brucella")
 list.files()
 goat_data_only<-read_csv("/Users/Tulsigompo/Documents/Presentaion_Dr_Gompo/Rupandehi_study_data/Goat_and_sheep_brucella/goat_data_latest_only.csv")
@@ -36,10 +231,7 @@ summary (goat_data_only$Parity, na.rm=TRUE)
 # Breed
 table(goat_data_only$Breed,goat_data_only$ELISA_final)
 
-# Vaccination of PPR and FMD
 
-table(goat_data_only$Vaccination_FMD,goat_data_only$ELISA_final)
-table(goat_data_only$Vaccination_ppr,goat_data_only$ELISA_final)
 
 # Other useful
 
@@ -50,9 +242,7 @@ table(goat_data_only$Use_of_lime_atentrance, goat_data_only$ELISA_final) # Prote
 table(goat_data_only$Animals_contact_wd_othersanimals, goat_data_only$ELISA_final) # Not signifant Risk (high P)
 
 
-## Making factors
-
-# correlation
+# correlation tests
 cor.test(goat_data_only$gender_codes, goat_data_only$Age_years)  # Negative correlation
 cor.test(goat_data_only$gender_codes, goat_data_only$Herd_size) # No correlation
 cor.test(goat_data_only$gender_codes, goat_data_only$Parity)  # Negative correlation
@@ -163,51 +353,16 @@ Anova(goat_lime_atentrance)
 exp(coef(goat_lime_atentrance))
 exp(confint(goat_lime_atentrance))
 
-##History_of_abortion  #) boder line and consider
-table(goat_data_only$History_of_abortion, goat_data_only$ELISA_final)
-goat_data_only$ELISA_final<- as.factor(goat_data_only$ELISA_final)
-goat_data_only$History_of_abortion<- as.factor(goat_data_only$History_of_abortion)
-goat_History_of_abortion<- glm (ELISA_final ~ History_of_abortion,  data= goat_data_only, family= binomial(link="logit"))
-Anova(goat_History_of_abortion)
-exp(coef(goat_History_of_abortion))
-exp(confint(goat_History_of_abortion))
 
-##Repeat breding  # Not significant and drop out from final model
-
+##Repeat breding  
 table(goat_data_only$Repeat_breeding, goat_data_only$ELISA_final) # Not signifant Risk
 goat_data_only$Repeat_breeding<- as.factor(goat_data_only$Repeat_breeding)
 goat_Repeat_breeding<- glm (ELISA_final ~Repeat_breeding,  data= goat_data_only, family= binomial(link="logit"))
 Anova(goat_Repeat_breeding)
 exp(coef(goat_Repeat_breeding))
 exp(confint(goat_Repeat_breeding))
-
-# Multivariables # Since we have zero values it produced error in generating high ORs and CI.So, I choose to use Penalised logistic regression. 
-library(car)
-library(MASS)
-goat_data_only$ ELISA_final<-as.factor(goat_data_only$ELISA_final)
-FullModel_goat_brucella<-glm( ELISA_final ~ age_years_cat_2+gender_codes+herd_size_cat+ Grazing_system+Use_of_lime_atentrance+History_of_abortion+
-                      Repeat_breeding, data = goat_data_only,na.action = na.exclude,  family = binomial(link = "logit"))
-summary(FullModel_goat_brucella)
-Anova(FullModel_goat_brucella,type=3)
-exp(coef(FullModel_goat_brucella))
-exp(confint(FullModel_goat_brucella))
-
-
-# Alternative model p< 0.25
-Model_1<-glm ( ELISA_final ~ age_years_cat_2+gender_codes+herd_size_cat+ Use_of_lime_atentrance+Grazing_system +History_of_abortion,
-                                data = goat_data_only, na.action = na.exclude,  family = binomial(link = "logit"))
-summary(Model_1)
-Anova(Model_1,type=3)
-exp(coef(Model_1))
-exp(confint(Model_1))
-
-
-
-# By step wise AIC subset selection
-options(na.action = "na.fail")
-library(MuMIn)
-AllSubsets<-dredge(FullModel_goat_brucella,rank="AIC")
-head(AllSubsets)
+# Multivariables regression analysis
+# Since we have zero values it produced error in generating high ORs and CI.So, I choose to use Penalised logistic regression. 
 
 
 ## Penalised logistic regression by use of "logistf"
