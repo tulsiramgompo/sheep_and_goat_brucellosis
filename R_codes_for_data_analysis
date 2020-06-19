@@ -1,0 +1,314 @@
+## Animal level data
+library(readr)
+
+setwd("/Users/Tulsigompo/Documents/Presentaion_Dr_Gompo/Rupandehi_study_data/Goat_and_sheep_brucella")
+list.files()
+goat_data_only<-read_csv("/Users/Tulsigompo/Documents/Presentaion_Dr_Gompo/Rupandehi_study_data/Goat_and_sheep_brucella/goat_data_latest_only.csv")
+head(goat_data_only)
+str(goat_data_only)
+
+table(goat_data_only$animal_origin,goat_data_only$ELISA_final)
+
+# Descriptive study
+# Age years (median= 2 years) 
+
+median(goat_data_only$Age_years)
+
+summary(goat_data_only$Age_years)
+## gender
+table(goat_data_only$Gender, goat_data_only$ELISA_final) # female are not significat risk (important)
+## Age years
+table(goat_data_only $ age_years_cat_2, goat_data_only$ELISA_final)
+
+# Age years (median= 2 years)
+table(goat_data_only$age_years_cat_2, goat_data_only$ELISA_final) # zero cells Non significant risk important
+
+# Herd size cat
+herd_size_cat
+table(goat_data_only$herd_size_cat, goat_data_only$ELISA_final) # zero cells and significant
+median(goat_data_only$Herd_size)
+summary(goat_data_only$Herd_size)
+# median parity
+median(goat_data_only$Parity,na.rm = TRUE)
+table(goat_data_only$parity_cat_median_1, goat_data_only$ELISA_final) # zero cells and significant
+summary (goat_data_only$Parity, na.rm=TRUE)
+
+# Breed
+table(goat_data_only$Breed,goat_data_only$ELISA_final)
+
+# Vaccination of PPR and FMD
+
+table(goat_data_only$Vaccination_FMD,goat_data_only$ELISA_final)
+table(goat_data_only$Vaccination_ppr,goat_data_only$ELISA_final)
+
+# Other useful
+
+table(goat_data_only$Vaccination_ppr, goat_data_only$ELISA_final) ## PPr vaccination protective very significant
+table(goat_data_only$Grazing_system, goat_data_only$ELISA_final) ## very signidicant risk
+table(goat_data_only$Common_grazing_Herds, goat_data_only$ELISA_final) ### Not signifant Risk (high P) collapse with grazing system
+table(goat_data_only$Use_of_lime_atentrance, goat_data_only$ELISA_final) # Protective and consider
+table(goat_data_only$Animals_contact_wd_othersanimals, goat_data_only$ELISA_final) # Not signifant Risk (high P)
+
+
+## Making factors
+
+# correlation
+cor.test(goat_data_only$gender_codes, goat_data_only$Age_years)  # Negative correlation
+cor.test(goat_data_only$gender_codes, goat_data_only$Herd_size) # No correlation
+cor.test(goat_data_only$gender_codes, goat_data_only$Parity)  # Negative correlation
+
+cor.test(goat_data_only$Parity, goat_data_only$Age_years) # High correlation so need to think
+ 
+## Correlations
+
+library(dplyr)
+goat_data_only_1<-goat_data_only %>%
+  select(gender_codes,age_years_cat_2_codes,herd_size_cat_codes,Parity)
+cor(goat_data_only_1)
+
+library(dplyr)
+library(GGally)
+goat_data_only_2<-goat_data_only %>%
+  select(gender_codes,age_years_cat_2_codes,Parity,herd_size_cat_codes)
+ggpairs(goat_data_only_2)
+ggcorr(goat_data_only_2) # for colorful maps
+
+# Univariables
+table(goat_data_only$animal_orgin_cat,goat_data_only$ELISA_final)
+goat_data_only$animal_orgin_cat<-as.factor(goat_data_only$animal_orgin_cat)
+goat_data_only$ELISA_final<-as.factor(goat_data_only$ELISA_final)
+goat_data_only$animal_orgin_cat<-relevel(goat_data_only$animal_orgin_cat,ref = "imported")
+goat_animal_orgin<- glm (ELISA_final ~ animal_orgin_cat,  data= goat_data_only, family= binomial(link="logit"))
+summary(goat_animal_orgin)
+Anova(goat_animal_orgin)
+exp(coef(goat_animal_orgin))
+exp(confint(goat_animal_orgin))
+library(car)
+
+
+
+# Ageyears (median= 2 years)  # Not significant but consider in model as p= 0.14
+table(goat_data_only$age_years_cat_2,goat_data_only$ELISA_final)
+goat_data_only$age_years_cat_2<-as.factor(goat_data_only$age_years_cat_2)
+goat_data_only$ELISA_final<-as.factor(goat_data_only$ELISA_final)
+goat_age_cat<- glm (ELISA_final ~ age_years_cat_2,  data= goat_data_only, family= binomial(link="logit"))
+summary(goat_age_cat)
+Anova(goat_age_cat)
+exp(coef(goat_age_cat))
+exp(confint(goat_age_cat))
+
+# Gender  # Not significant and consider in final model as p=0.2038
+goat_data_only$gender_codes<-as.factor(goat_data_only$gender_codes)
+table(goat_data_only$gender_codes, goat_data_only$ELISA_final)
+table(goat_data_only$age_years_cat_2,goat_data_only$ELISA_final)
+goat_data_only$gender_codes<-as.factor(gender_codes$age_years_cat_2)
+goat_data_only$ELISA_final<-as.factor(goat_data_only$ELISA_final)
+goat_gender_code<- glm (ELISA_final ~ gender_codes,  data= goat_data_only, family= binomial(link="logit"))
+summary(goat_gender_code)
+Anova(goat_gender_code)
+exp(coef(goat_gender_code))
+exp(confint(goat_gender_code))
+
+## Parity   # significant
+table(goat_data_only$parity_cat_median_1, goat_data_only$ELISA_final)
+goat_data_only$parity_cat_median_1<-as.factor(goat_data_only$parity_cat_median_1)
+goat_parity<- glm (ELISA_final ~ parity_cat_median_1,  data= goat_data_only, family= binomial(link="logit"))
+summary(goat_parity)
+Anova(goat_parity)
+exp(coef(goat_parity))
+exp(confint(goat_parity))
+
+# herd_size_cat  # Significant
+table(goat_data_only$herd_size_cat, goat_data_only$ELISA_final)
+goat_data_only$herd_size_cat<-as.factor(goat_data_only$herd_size_cat)
+goat_data_only$herd_size_cat<-relevel(goat_data_only$herd_size_cat,ref="equal_or_below_median")
+goat_herd_size<- glm (ELISA_final ~ herd_size_cat,  data= goat_data_only, family= binomial(link="logit"))
+summary(goat_herd_size)
+Anova(goat_herd_size)
+exp(coef(goat_herd_size))
+exp(confint(goat_herd_size))
+
+# Grazing $ Significant
+table(goat_data_only$Grazing_system, goat_data_only$ELISA_final) 
+goat_data_only$ELISA_final<-as.factor(goat_data_only$ELISA_final)
+goat_data_only$Grazing_system<-as.factor(goat_data_only$Grazing_system)
+goat_data_only$Grazing_system<-relevel(goat_data_only$Grazing_system,ref="no")
+goat_grazing_system<- glm (ELISA_final ~ Grazing_system,  data= goat_data_only, family= binomial(link="logit"))
+summary(goat_grazing_system)
+Anova(goat_grazing_system)
+exp(coef(goat_grazing_system))
+exp(confint(goat_grazing_system))
+
+# Common Grazing $ Not significant an drop from model
+table(goat_data_only$Common_grazing_Herds, goat_data_only$ELISA_final) 
+goat_data_only$Common_grazing_Herds<-as.factor(goat_data_only$Common_grazing_Herds)
+goat_common_grazing_Herds<- glm (ELISA_final ~ Common_grazing_Herds,  data= goat_data_only, family= binomial(link="logit"))
+Anova(goat_common_grazing_Herds)
+exp(coef(goat_common_grazing_Herds))
+exp(confint(goat_common_grazing_Herds))
+
+# Grazing system  # Very sigificant
+table(goat_data_only$Grazing_system, goat_data_only$ELISA_final) 
+goat_data_only$Grazing_system<-as.factor(goat_data_only$Grazing_system)
+goat_grazing_system<- glm (ELISA_final ~ Grazing_system,  data= goat_data_only, family= binomial(link="logit"))
+Anova(goat_grazing_system)
+exp(coef(goat_grazing_system))
+exp(confint(goat_grazing_system))
+
+# Limestone at farm entry # significant and consider
+table(goat_data_only$Use_of_lime_atentrance, goat_data_only$ELISA_final) # Protective and consider
+goat_data_only$Use_of_lime_atentrance<-as.factor(goat_data_only$Use_of_lime_atentrance)
+goat_lime_atentrance<- glm (ELISA_final ~ Use_of_lime_atentrance,  data= goat_data_only, family= binomial(link="logit"))
+Anova(goat_lime_atentrance)
+exp(coef(goat_lime_atentrance))
+exp(confint(goat_lime_atentrance))
+
+##History_of_abortion  #) boder line and consider
+table(goat_data_only$History_of_abortion, goat_data_only$ELISA_final)
+goat_data_only$ELISA_final<- as.factor(goat_data_only$ELISA_final)
+goat_data_only$History_of_abortion<- as.factor(goat_data_only$History_of_abortion)
+goat_History_of_abortion<- glm (ELISA_final ~ History_of_abortion,  data= goat_data_only, family= binomial(link="logit"))
+Anova(goat_History_of_abortion)
+exp(coef(goat_History_of_abortion))
+exp(confint(goat_History_of_abortion))
+
+##Repeat breding  # Not significant and drop out from final model
+
+table(goat_data_only$Repeat_breeding, goat_data_only$ELISA_final) # Not signifant Risk
+goat_data_only$Repeat_breeding<- as.factor(goat_data_only$Repeat_breeding)
+goat_Repeat_breeding<- glm (ELISA_final ~Repeat_breeding,  data= goat_data_only, family= binomial(link="logit"))
+Anova(goat_Repeat_breeding)
+exp(coef(goat_Repeat_breeding))
+exp(confint(goat_Repeat_breeding))
+
+# Multivariables # Since we have zero values it produced error in generating high ORs and CI.So, I choose to use Penalised logistic regression. 
+library(car)
+library(MASS)
+goat_data_only$ ELISA_final<-as.factor(goat_data_only$ELISA_final)
+FullModel_goat_brucella<-glm( ELISA_final ~ age_years_cat_2+gender_codes+herd_size_cat+ Grazing_system+Use_of_lime_atentrance+History_of_abortion+
+                      Repeat_breeding, data = goat_data_only,na.action = na.exclude,  family = binomial(link = "logit"))
+summary(FullModel_goat_brucella)
+Anova(FullModel_goat_brucella,type=3)
+exp(coef(FullModel_goat_brucella))
+exp(confint(FullModel_goat_brucella))
+
+
+# Alternative model p< 0.25
+Model_1<-glm ( ELISA_final ~ age_years_cat_2+gender_codes+herd_size_cat+ Use_of_lime_atentrance+Grazing_system +History_of_abortion,
+                                data = goat_data_only, na.action = na.exclude,  family = binomial(link = "logit"))
+summary(Model_1)
+Anova(Model_1,type=3)
+exp(coef(Model_1))
+exp(confint(Model_1))
+
+
+
+# By step wise AIC subset selection
+options(na.action = "na.fail")
+library(MuMIn)
+AllSubsets<-dredge(FullModel_goat_brucella,rank="AIC")
+head(AllSubsets)
+
+
+## Penalised logistic regression by use of "logistf"
+## Reference: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4944325/?report=printable#ref19
+## https://www.youtube.com/watch?v=fVbrUz6V_uk
+## Univariable analysis
+# Grazing system
+library(logistf)
+goat_data_only$ELISA_final<-as.factor(goat_data_only$ELISA_final)
+
+
+# Age category
+cat_1<-logistf (ELISA_final ~ age_years_cat_2, data = goat_data_only)
+summary(cat_1)
+exp(coef(cat_1))
+
+# Gender
+goat_data_only$gender_codes<-as.factor(goat_data_only$gender_codes)
+goat_data_only$gender_codes<-relevel(goat_data_only$gender_codes,ref="1")
+Gender_1<- logistf (ELISA_final ~ gender_codes,  data= goat_data_only,firth = TRUE,p1=TRUE)
+summary(Gender_1)
+Anova(Gender_1)  # Produced error on Logistf
+exp(coef(Gender_1))
+exp(confint(Gender_1))
+
+## Parity
+
+# herd size
+goat_data_only$herd_size_cat<-relevel(goat_data_only$herd_size_cat,ref="equal_or_below_median")
+herd_1<- logistf (ELISA_final ~ herd_size_cat,  data= goat_data_only,firth = TRUE,p1=TRUE)
+summary(herd_1)
+anova(herd_1, formula=~herd_size_cat)
+exp(coef(herd_1))
+exp(confint(herd_1))
+
+# grazing system 
+goat_data_only$Grazing_system<-relevel(goat_data_only$Grazing_system,ref="no")
+goat_grazing_system<- logistf (ELISA_final ~ Grazing_system,  data= goat_data_only,firth = TRUE,p1=TRUE)
+summary(goat_grazing_system)
+anova(goat_grazing_system, formula=~ Grazing_system)
+exp(coef(goat_grazing_system))
+exp(confint(goat_grazing_system))
+
+
+# History_of_abortion
+goat_data_only$History_of_abortion<-relevel(goat_data_only$History_of_abortion,ref="no")
+goat_History_of_abortion<- logistf (ELISA_final ~ History_of_abortion,  data= goat_data_only,firth = TRUE,p1=TRUE)
+summary(goat_History_of_abortion)
+anova(goat_History_of_abortion, formula=~ History_of_abortion)
+exp(coef(goat_History_of_abortion))
+exp(confint(goat_History_of_abortion))
+
+# use of lime 
+Use_of_lime_atentrance
+goat_data_only$Use_of_lime_atentrance<-relevel(goat_data_only$Use_of_lime_atentrance,ref="No")
+goat_lime_at_entrance<- logistf (ELISA_final ~ Use_of_lime_atentrance,  data= goat_data_only,firth = TRUE,p1=FALSE)
+summary(goat_lime_at_entrance)
+anova(goat_lime_at_entrance,formula=~ Use_of_lime_atentrance)
+exp(coef(goat_lime_at_entrance))
+exp(confint(goat_lime_at_entrance))
+
+## Running full model by PENALISE LOGISTIC REGRESSION for the correction of biased estimates
+library(logistf)
+goat_data_only$ELISA_final<-as.factor(goat_data_only$ELISA_final)
+goat_data_only$ELISA_final<- as.factor (goat_data_only$ELISA_final)
+goat_data_only$age_years_cat_2<- as.factor (goat_data_only$age_years_cat_2)
+Model_logistf_1<-logistf( ELISA_final ~ gender_codes + age_years_cat_2 + herd_size_cat_codes + Grazing_system + History_of_abortion + Use_of_lime_atentrance,
+                          data = goat_data_only, firth = TRUE,p1=TRUE)
+
+summary(Model_logistf_1)
+anova(Model_logistf_1)
+# Model selection step wise
+fitf<-forward(Model_logistf_1)
+fitb<-backward(Model_logistf_1)
+
+# Alternative methods
+goat_data_only$ELISA_final<- as.factor (goat_data_only$ELISA_final)
+goat_data_only$age_years_cat_2<- as.factor (goat_data_only$age_years_cat_2)
+goat_data_only$herd_size_cat_codes2<- as.factor (goat_data_only$herd_size_cat_codes)
+goat_data_only$parity_cat_median_1<- as.factor (goat_data_only$parity_cat_median_1)
+goat_data_only$Grazing_system<- as.factor (goat_data_only$Grazing_system)
+goat_data_only$gender_codes<- as.factor (goat_data_only$gender_codes)
+
+Model_logistf_2<- logistf (ELISA_final ~ age_years_cat_2 + herd_size_cat_codes+ parity_cat_median_1 + Grazing_system + gender_codes, data = goat_data_only, firth = TRUE, p1=TRUE)
+
+anova(Model_logistf_1, formula = ~ age_years_cat_2 + herd_size_cat_codes+ Parity + Grazing_system + gender_codes)
+exp(coef(Model_logistf_1))
+exp(confint(Model_logistf_1))
+
+
+Model_logistf_2 <- step (Model_logistf_1, direction="backward")
+summary(Model_goat_brucella_1)
+Anova(Model_goat_brucella_1,type=3)
+exp(coef(Model_goat_brucella_1))
+exp(confint(Model_goat_brucella_1))
+
+# AIC based methods of model selction
+options(na.action = "na.exclude")
+library(MuMIn)
+AllSubset<-dredge(Model_logistf_1,rank="AIC")
+head(AllSubsets)
+
+
+
