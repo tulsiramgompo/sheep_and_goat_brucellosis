@@ -465,5 +465,12 @@ library(MuMIn)
 AllSubset<-dredge(Model_logistf_1,rank="AIC")
 head(AllSubsets)
 
+## After reviewr's comment, the goat data is re-analysed by Firth logistic regression in STATA. The univariable and multivariable logistic `regression codes are listed below.
+# Bivariate analysis
+ xi: firthlogit i.elisa_final i.age_years_cat_2 
+ xi: firthlogit i.elisa_final i.herd_size_cat
+ xi: firthlogit i.elisa_final i.parity_cat_median_1 
+xi: firthlogit i.elisa_final i.grazing_system 
+# Since age in years and parity category are highly correlated, the parity has been removed from the multivariable firth losgit regression.
 
-
+xi: firthlogit i.elisa_final  i.age_years_cat_2  i.herd_size_cat  i.grazing_system 
